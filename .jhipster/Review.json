@@ -1,0 +1,27 @@
+{
+    "fluentMethods": true,
+    "relationships": [
+        {
+            "relationshipType": "one-to-many",
+            "relationshipName": "helpFullness",
+            "otherEntityName": "helpFull",
+            "otherEntityRelationshipName": "review"
+        }
+    ],
+    "fields": [
+        {
+            "fieldName": "comment",
+            "fieldType": "String"
+        },
+        {
+            "fieldName": "rate",
+            "fieldType": "Rate",
+            "fieldValues": "VERY_POOR,POOR,NORMAL,GOOD,VERY_GOOD"
+        }
+    ],
+    "changelogDate": "20170924132925",
+    "entityTableName": "review",
+    "dto": "no",
+    "pagination": "pagination",
+    "service": "serviceImpl"
+}
