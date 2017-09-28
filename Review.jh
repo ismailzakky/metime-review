@@ -1,13 +1,13 @@
 
 entity Review {
 	id String
-	comment String
 	rate Rate
+	comment String
+    segment1 String
 }
 
-
 entity HelpFull {
-	creationalDate String
+	id String
     helpfullCategory HelpFullCategory
 }
 
@@ -15,12 +15,12 @@ enum Rate {
 	VERY_POOR,POOR,NORMAL,GOOD,VERY_GOOD
 }
 
-
 enum HelpFullCategory {
 	HELPFULL,UNHELPFULL,INAPPRORIATE,SPAM
 }
+
 relationship OneToMany {
-	Review{HelpFullness} to HelpFull
+	Review{HelpFulness} to HelpFull
 }
 
 paginate Review with pagination

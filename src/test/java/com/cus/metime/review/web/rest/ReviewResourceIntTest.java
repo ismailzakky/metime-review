@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.cus.metime.review.domain.enumeration.Rate;
+import com.cus.metime.review.service.HelpFullService;
 /**
  * Test class for the ReviewResource REST controller.
  *
@@ -41,18 +42,24 @@ import com.cus.metime.review.domain.enumeration.Rate;
 @SpringBootTest(classes = {ReviewApp.class, SecurityBeanOverrideConfiguration.class})
 public class ReviewResourceIntTest {
 
+    private static final Rate DEFAULT_RATE = Rate.VERY_POOR;
+    private static final Rate UPDATED_RATE = Rate.POOR;
+
     private static final String DEFAULT_COMMENT = "AAAAAAAAAA";
     private static final String UPDATED_COMMENT = "BBBBBBBBBB";
 
-    private static final Rate DEFAULT_RATE = Rate.VERY_POOR;
-    private static final Rate UPDATED_RATE = Rate.POOR;
+    private static final String DEFAULT_SEGMENT_1 = "AAAAAAAAAA";
+    private static final String UPDATED_SEGMENT_1 = "BBBBBBBBBB";
 
     @Autowired
     private ReviewRepository reviewRepository;
 
     @Autowired
     private ReviewService reviewService;
-
+    
+    @Autowired
+    private HelpFullService helpFullService;
+    
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
 
@@ -72,7 +79,7 @@ public class ReviewResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final ReviewResource reviewResource = new ReviewResource(reviewService);
+        final ReviewResource reviewResource = new ReviewResource(reviewService, helpFullService);
         this.restReviewMockMvc = MockMvcBuilders.standaloneSetup(reviewResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -87,8 +94,9 @@ public class ReviewResourceIntTest {
      */
     public static Review createEntity(EntityManager em) {
         Review review = new Review()
+            .rate(DEFAULT_RATE)
             .comment(DEFAULT_COMMENT)
-            .rate(DEFAULT_RATE);
+            .segment1(DEFAULT_SEGMENT_1);
         return review;
     }
 
@@ -112,8 +120,9 @@ public class ReviewResourceIntTest {
         List<Review> reviewList = reviewRepository.findAll();
         assertThat(reviewList).hasSize(databaseSizeBeforeCreate + 1);
         Review testReview = reviewList.get(reviewList.size() - 1);
-        assertThat(testReview.getComment()).isEqualTo(DEFAULT_COMMENT);
         assertThat(testReview.getRate()).isEqualTo(DEFAULT_RATE);
+        assertThat(testReview.getComment()).isEqualTo(DEFAULT_COMMENT);
+        assertThat(testReview.getSegment1()).isEqualTo(DEFAULT_SEGMENT_1);
     }
 
     @Test
@@ -146,8 +155,9 @@ public class ReviewResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(review.getId().intValue())))
+            .andExpect(jsonPath("$.[*].rate").value(hasItem(DEFAULT_RATE.toString())))
             .andExpect(jsonPath("$.[*].comment").value(hasItem(DEFAULT_COMMENT.toString())))
-            .andExpect(jsonPath("$.[*].rate").value(hasItem(DEFAULT_RATE.toString())));
+            .andExpect(jsonPath("$.[*].segment1").value(hasItem(DEFAULT_SEGMENT_1.toString())));
     }
 
     @Test
@@ -161,8 +171,9 @@ public class ReviewResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(review.getId().intValue()))
+            .andExpect(jsonPath("$.rate").value(DEFAULT_RATE.toString()))
             .andExpect(jsonPath("$.comment").value(DEFAULT_COMMENT.toString()))
-            .andExpect(jsonPath("$.rate").value(DEFAULT_RATE.toString()));
+            .andExpect(jsonPath("$.segment1").value(DEFAULT_SEGMENT_1.toString()));
     }
 
     @Test
@@ -177,15 +188,16 @@ public class ReviewResourceIntTest {
     @Transactional
     public void updateReview() throws Exception {
         // Initialize the database
-        reviewService.save(review);
+//        reviewService.save(review);
 
         int databaseSizeBeforeUpdate = reviewRepository.findAll().size();
 
         // Update the review
         Review updatedReview = reviewRepository.findOne(review.getId());
         updatedReview
+            .rate(UPDATED_RATE)
             .comment(UPDATED_COMMENT)
-            .rate(UPDATED_RATE);
+            .segment1(UPDATED_SEGMENT_1);
 
         restReviewMockMvc.perform(put("/api/reviews")
             .contentType(TestUtil.APPLICATION_JSON_UTF8)
@@ -196,8 +208,9 @@ public class ReviewResourceIntTest {
         List<Review> reviewList = reviewRepository.findAll();
         assertThat(reviewList).hasSize(databaseSizeBeforeUpdate);
         Review testReview = reviewList.get(reviewList.size() - 1);
-        assertThat(testReview.getComment()).isEqualTo(UPDATED_COMMENT);
         assertThat(testReview.getRate()).isEqualTo(UPDATED_RATE);
+        assertThat(testReview.getComment()).isEqualTo(UPDATED_COMMENT);
+        assertThat(testReview.getSegment1()).isEqualTo(UPDATED_SEGMENT_1);
     }
 
     @Test
@@ -222,7 +235,7 @@ public class ReviewResourceIntTest {
     @Transactional
     public void deleteReview() throws Exception {
         // Initialize the database
-        reviewService.save(review);
+//        reviewService.save(review);
 
         int databaseSizeBeforeDelete = reviewRepository.findAll().size();
 

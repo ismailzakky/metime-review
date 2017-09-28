@@ -32,6 +32,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 import com.cus.metime.review.domain.enumeration.HelpFullCategory;
+import com.cus.metime.review.service.ReviewService;
 /**
  * Test class for the HelpFullResource REST controller.
  *
@@ -41,9 +42,6 @@ import com.cus.metime.review.domain.enumeration.HelpFullCategory;
 @SpringBootTest(classes = {ReviewApp.class, SecurityBeanOverrideConfiguration.class})
 public class HelpFullResourceIntTest {
 
-    private static final String DEFAULT_CREATIONAL_DATE = "AAAAAAAAAA";
-    private static final String UPDATED_CREATIONAL_DATE = "BBBBBBBBBB";
-
     private static final HelpFullCategory DEFAULT_HELPFULL_CATEGORY = HelpFullCategory.HELPFULL;
     private static final HelpFullCategory UPDATED_HELPFULL_CATEGORY = HelpFullCategory.UNHELPFULL;
 
@@ -52,6 +50,9 @@ public class HelpFullResourceIntTest {
 
     @Autowired
     private HelpFullService helpFullService;
+    
+    @Autowired
+    private ReviewService reviewService;
 
     @Autowired
     private MappingJackson2HttpMessageConverter jacksonMessageConverter;
@@ -72,7 +73,7 @@ public class HelpFullResourceIntTest {
     @Before
     public void setup() {
         MockitoAnnotations.initMocks(this);
-        final HelpFullResource helpFullResource = new HelpFullResource(helpFullService);
+        final HelpFullResource helpFullResource = new HelpFullResource(helpFullService, reviewService);
         this.restHelpFullMockMvc = MockMvcBuilders.standaloneSetup(helpFullResource)
             .setCustomArgumentResolvers(pageableArgumentResolver)
             .setControllerAdvice(exceptionTranslator)
@@ -87,7 +88,6 @@ public class HelpFullResourceIntTest {
      */
     public static HelpFull createEntity(EntityManager em) {
         HelpFull helpFull = new HelpFull()
-            .creationalDate(DEFAULT_CREATIONAL_DATE)
             .helpfullCategory(DEFAULT_HELPFULL_CATEGORY);
         return helpFull;
     }
@@ -112,7 +112,6 @@ public class HelpFullResourceIntTest {
         List<HelpFull> helpFullList = helpFullRepository.findAll();
         assertThat(helpFullList).hasSize(databaseSizeBeforeCreate + 1);
         HelpFull testHelpFull = helpFullList.get(helpFullList.size() - 1);
-        assertThat(testHelpFull.getCreationalDate()).isEqualTo(DEFAULT_CREATIONAL_DATE);
         assertThat(testHelpFull.getHelpfullCategory()).isEqualTo(DEFAULT_HELPFULL_CATEGORY);
     }
 
@@ -146,7 +145,6 @@ public class HelpFullResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.[*].id").value(hasItem(helpFull.getId().intValue())))
-            .andExpect(jsonPath("$.[*].creationalDate").value(hasItem(DEFAULT_CREATIONAL_DATE.toString())))
             .andExpect(jsonPath("$.[*].helpfullCategory").value(hasItem(DEFAULT_HELPFULL_CATEGORY.toString())));
     }
 
@@ -161,7 +159,6 @@ public class HelpFullResourceIntTest {
             .andExpect(status().isOk())
             .andExpect(content().contentType(MediaType.APPLICATION_JSON_UTF8_VALUE))
             .andExpect(jsonPath("$.id").value(helpFull.getId().intValue()))
-            .andExpect(jsonPath("$.creationalDate").value(DEFAULT_CREATIONAL_DATE.toString()))
             .andExpect(jsonPath("$.helpfullCategory").value(DEFAULT_HELPFULL_CATEGORY.toString()));
     }
 
@@ -177,14 +174,13 @@ public class HelpFullResourceIntTest {
     @Transactional
     public void updateHelpFull() throws Exception {
         // Initialize the database
-        helpFullService.save(helpFull);
+//        helpFullService.save(helpFull);
 
         int databaseSizeBeforeUpdate = helpFullRepository.findAll().size();
 
         // Update the helpFull
         HelpFull updatedHelpFull = helpFullRepository.findOne(helpFull.getId());
         updatedHelpFull
-            .creationalDate(UPDATED_CREATIONAL_DATE)
             .helpfullCategory(UPDATED_HELPFULL_CATEGORY);
 
         restHelpFullMockMvc.perform(put("/api/help-fulls")
@@ -196,7 +192,6 @@ public class HelpFullResourceIntTest {
         List<HelpFull> helpFullList = helpFullRepository.findAll();
         assertThat(helpFullList).hasSize(databaseSizeBeforeUpdate);
         HelpFull testHelpFull = helpFullList.get(helpFullList.size() - 1);
-        assertThat(testHelpFull.getCreationalDate()).isEqualTo(UPDATED_CREATIONAL_DATE);
         assertThat(testHelpFull.getHelpfullCategory()).isEqualTo(UPDATED_HELPFULL_CATEGORY);
     }
 
@@ -222,7 +217,7 @@ public class HelpFullResourceIntTest {
     @Transactional
     public void deleteHelpFull() throws Exception {
         // Initialize the database
-        helpFullService.save(helpFull);
+//        helpFullService.save(helpFull);
 
         int databaseSizeBeforeDelete = helpFullRepository.findAll().size();
 

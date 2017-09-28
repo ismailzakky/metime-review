@@ -10,10 +10,6 @@
     ],
     "fields": [
         {
-            "fieldName": "creationalDate",
-            "fieldType": "String"
-        },
-        {
             "fieldName": "helpfullCategory",
             "fieldType": "HelpFullCategory",
             "fieldValues": "HELPFULL,UNHELPFULL,INAPPRORIATE,SPAM"
